@@ -37,6 +37,30 @@ type KeywordDialog =
 const DEFAULT_ICON = "🏷️";
 const PAGE_SIZE = 10;
 
+class DuplicateKeywordError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DuplicateKeywordError";
+  }
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String((error as { message?: unknown }).message);
+  }
+  return "Unknown error";
+}
+
+function isUniqueViolation(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    String((error as { code?: unknown }).code) === "23505"
+  );
+}
+
 export default function CategoriesPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<CategoryRow[]>([]);
@@ -44,6 +68,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [duplicateKeywordError, setDuplicateKeywordError] = useState("");
   const [categoryDialog, setCategoryDialog] = useState<CategoryDialog | null>(
     null,
   );
@@ -376,6 +401,7 @@ export default function CategoriesPage() {
   const saveChanges = async () => {
     setSaving(true);
     setMessage("");
+    setDuplicateKeywordError("");
 
     try {
       const deletedKeywords = keywords.filter(
@@ -423,6 +449,9 @@ export default function CategoriesPage() {
             keyword: keyword.keyword,
           })),
         );
+        if (error && isUniqueViolation(error)) {
+          throw new DuplicateKeywordError(getErrorMessage(error));
+        }
         if (error) throw error;
       }
 
@@ -446,9 +475,15 @@ export default function CategoriesPage() {
       }
 
       await loadData();
+      router.refresh();
       setMessage("บันทึกลง DB แล้ว");
     } catch (error) {
-      const text = error instanceof Error ? error.message : "Unknown error";
+      const text = getErrorMessage(error);
+      if (error instanceof DuplicateKeywordError) {
+        setDuplicateKeywordError(
+          "พบคำซ้ำในตาราง keyword สำหรับการเพิ่ม keywords กรุณาตรวจสอบคำที่เพิ่มใหม่ แล้วแก้ไขหรือลบรายการซ้ำก่อนบันทึกอีกครั้ง",
+        );
+      }
       setMessage("บันทึกไม่สำเร็จ: " + text);
     } finally {
       setSaving(false);
@@ -962,6 +997,30 @@ export default function CategoriesPage() {
                   !keywordDialog.keyword.trim() || !keywordDialog.categoryId
                 }
                 className="rounded-lg bg-[#10B981] px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ตกลง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {duplicateKeywordError && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+            <div className="border-b border-red-100 bg-red-50 px-4 py-3">
+              <div className="text-sm font-semibold text-red-700">
+                พบคำซ้ำในตาราง keyword
+              </div>
+            </div>
+            <div className="p-4 text-sm leading-6 text-[#374151]">
+              {duplicateKeywordError}
+            </div>
+            <div className="flex justify-end border-t border-[#E5E7EB] px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setDuplicateKeywordError("")}
+                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-700"
               >
                 ตกลง
               </button>
