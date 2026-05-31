@@ -45,10 +45,10 @@ export function FilterBar({
   );
 
   return (
-    <div className="bg-white border border-[#E5E7EB] rounded-lg p-2.5 flex items-center gap-2.5 mb-3 flex-wrap">
-      <div className="flex-1 min-w-[150px] relative">
+    <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-lg border border-[#E5E7EB] bg-white p-2.5">
+      <div className="relative min-w-[150px] flex-1">
         <svg
-          className="w-3.25 h-3.25 absolute left-2 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+          className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -65,12 +65,12 @@ export function FilterBar({
           value={search}
           onChange={handleSearchChange}
           placeholder="ค้นหาสินค้า / กลิ่น / รุ่น..."
-          className="w-full p-[7px_10px_7px_30px] border border-[#E5E7EB] rounded-lg font-sans text-xs text-[#111827] bg-[#F8FAFC] outline-none transition-colors focus:border-[#10B981]"
+          className="w-full rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-[7px_10px_7px_30px] font-sans text-xs text-[#111827] outline-none transition-colors focus:border-[#10B981]"
         />
       </div>
 
-      <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-lg px-2.5 py-1.25">
-        <label className="text-xs text-[#6B7280] whitespace-nowrap">
+      <div className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] px-2.5 py-1.5">
+        <label className="whitespace-nowrap text-xs text-[#6B7280]">
           มากกว่า
         </label>
         <input
@@ -79,17 +79,17 @@ export function FilterBar({
           onChange={handleMinStockChange}
           min="0"
           step="1"
-          className="w-13 border-none bg-transparent font-sans text-xs text-[#111827] outline-none text-center"
+          className="w-12 border-none bg-transparent text-center font-sans text-xs text-[#111827] outline-none"
         />
-        <label className="text-xs text-[#6B7280] whitespace-nowrap">ชิ้น</label>
+        <label className="whitespace-nowrap text-xs text-[#6B7280]">ชิ้น</label>
       </div>
 
-      <label className="flex items-center gap-1.5 text-xs text-[#6B7280] cursor-pointer whitespace-nowrap">
+      <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs text-[#6B7280]">
         <input
           type="checkbox"
           checked={showQty}
           onChange={handleShowQtyChange}
-          className="w-4 h-4"
+          className="h-4 w-4"
         />
         แสดงจำนวน
       </label>

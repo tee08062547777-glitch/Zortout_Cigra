@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -27,20 +27,50 @@ const CATEGORIES = [
   {
     id: "disposable",
     label: "พอตใช้แล้วทิ้ง",
-    icon: "🚬",
-    keywords: ["puffs", "puff", "infy 20k", "relx"],
+    icon: "\u{1F6AC}",
+    keywords: ["disposable", "puffs", "puff", "infy", "relx", "ks", "kardinal"],
   },
   {
     id: "pod",
     label: "เครื่อง / พอต",
-    icon: "📱",
-    keywords: ["pod", "device"],
+    icon: "\u{1F4F1}",
+    keywords: ["pod", "device", "เครื่อง", "พอต", "relx infinity", "infy device"],
+  },
+  {
+    id: "pod-refill",
+    label: "หัวพอต / น้ำยาหัว",
+    icon: "\u{1F4A7}",
+    keywords: ["หัว", "refill", "cartridge", "pod pack", "หัวพอต", "น้ำยาหัว"],
   },
   {
     id: "saltnic",
     label: "ซอลท์นิค",
-    icon: "🧪",
-    keywords: ["salt", "saltnic"],
+    icon: "\u{1F9EA}",
+    keywords: ["salt", "saltnic", "salt nic", "ซอลท์", "ซอลนิค"],
+  },
+  {
+    id: "freebase",
+    label: "ฟรีเบส",
+    icon: "\u{1F9F4}",
+    keywords: ["freebase", "free base", "ฟรีเบส"],
+  },
+  {
+    id: "coil-atom",
+    label: "คอยล์ / อะตอม",
+    icon: "\u{1F527}",
+    keywords: ["coil", "คอยล์", "atom", "อะตอม", "rda", "rta", "rdta"],
+  },
+  {
+    id: "accessory",
+    label: "อุปกรณ์เสริม",
+    icon: "\u{1F50B}",
+    keywords: ["battery", "ถ่าน", "charger", "ชาร์จ", "สาย", "case", "accessory", "อุปกรณ์"],
+  },
+  {
+    id: "other",
+    label: "อื่นๆ",
+    icon: "\u{1F4CC}",
+    keywords: [],
   },
 ];
 
@@ -115,7 +145,7 @@ export default function DashboardPage() {
       await loadProducts();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      alert("❌ " + message);
+      alert("ซิงค์ไม่สำเร็จ: " + message);
     } finally {
       setSyncLoading(false);
     }
@@ -171,6 +201,7 @@ export default function DashboardPage() {
     .filter(Boolean) as Product[];
 
   const selectedItemsForPanel = selectedProducts.map((p) => ({
+    key: `${p.pid}||${p.variant || ""}`,
     group: p.product_name,
     variant: p.variant || p.product_name,
     stock: p.stock,
@@ -181,7 +212,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin mb-4">⏳</div>
+          <div className="animate-spin mb-4">...</div>
           <p className="text-[#6B7280]">กำลังโหลด...</p>
         </div>
       </div>
@@ -223,8 +254,8 @@ export default function DashboardPage() {
 
         </Header>
 
-        <div className="flex-1 px-[22px] py-[18px] overflow-auto pb-20">
-          <div className="flex gap-[18px]">
+        <div className="flex-1 overflow-auto px-[22px] py-[18px] pb-20">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_18rem] gap-[18px]">
             <div className="flex-1 min-w-0">
               <FilterBar
                 onSearch={setSearch}
@@ -234,7 +265,7 @@ export default function DashboardPage() {
 
               <CategoryPills
                 pills={[
-                  { id: "all", label: "ทั้งหมด", icon: "📦" },
+                  { id: "all", label: "ทั้งหมด", icon: "\u{1F4E6}" },
                   ...CATEGORIES,
                 ]}
                 active={activeCategory}
@@ -284,7 +315,6 @@ export default function DashboardPage() {
                         return newSelected;
                       });
                     }}
-                    showQty={showQty}
                   />
                 ))}
             </div>
@@ -293,6 +323,14 @@ export default function DashboardPage() {
               selectedItems={selectedItemsForPanel}
               showQty={showQty}
               onViewList={() => setProductModalOpen(true)}
+              onRemoveItem={(key) => {
+                setSelectedItems((currentSelected) => {
+                  const newSelected = new Set(currentSelected);
+                  newSelected.delete(key);
+                  return newSelected;
+                });
+              }}
+              onClearItems={() => setSelectedItems(new Set())}
             />
           </div>
         </div>

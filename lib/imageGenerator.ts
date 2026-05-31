@@ -9,6 +9,7 @@ export async function generateGridImages(
     image_url: string | null;
     stock?: number;
   }>,
+  options: { showStock?: boolean } = {},
 ): Promise<Blob[]> {
   const images: Blob[] = [];
   const itemsPerPage = 9; // 3x3 grid
@@ -17,7 +18,7 @@ export async function generateGridImages(
   for (let i = 0; i < selectedItems.length; i += itemsPerPage) {
     const chunk = selectedItems.slice(i, i + itemsPerPage);
     try {
-      const blob = await createGridImage(chunk);
+      const blob = await createGridImage(chunk, options);
       images.push(blob);
     } catch (error) {
       console.error("Error creating grid image:", error);
@@ -35,6 +36,7 @@ async function createGridImage(
     image_url: string | null;
     stock?: number;
   }>,
+  options: { showStock?: boolean },
 ): Promise<Blob> {
   return new Promise(async (resolve, reject) => {
     try {
@@ -121,7 +123,7 @@ async function createGridImage(
             drawImagePlaceholder(ctx, x + padding, y + padding, maxImgWidth, maxImgHeight);
           }
 
-          drawProductText(ctx, item, x, y, itemWidth, itemHeight);
+          drawProductText(ctx, item, x, y, itemWidth, itemHeight, options);
           itemIndex++;
         }
       }
@@ -153,7 +155,7 @@ function drawImagePlaceholder(
   ctx.strokeStyle = "#d1d5db";
   ctx.strokeRect(x, y, width, height);
   ctx.fillStyle = "#9ca3af";
-  ctx.font = "12px Arial, sans-serif";
+  ctx.font = "16px Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("No image", x + width / 2, y + height / 2);
 }
@@ -169,23 +171,26 @@ function drawProductText(
   y: number,
   itemWidth: number,
   itemHeight: number,
+  options: { showStock?: boolean },
 ) {
   const textX = x + itemWidth / 2;
   const maxWidth = itemWidth - 20;
+  const groupY = options.showStock ? y + itemHeight - 108 : y + itemHeight - 92;
+  const variantY = options.showStock ? y + itemHeight - 64 : y + itemHeight - 50;
 
   ctx.textAlign = "center";
 
   ctx.fillStyle = "#111827";
-  ctx.font = "bold 13px Arial, sans-serif";
-  drawWrappedText(ctx, item.group, textX, y + itemHeight - 92, maxWidth, 16, 2);
+  ctx.font = "bold 18px Arial, sans-serif";
+  drawWrappedText(ctx, item.group, textX, groupY, maxWidth, 21, 2);
 
   ctx.fillStyle = "#374151";
-  ctx.font = "12px Arial, sans-serif";
-  drawWrappedText(ctx, item.variant, textX, y + itemHeight - 58, maxWidth, 15, 2);
+  ctx.font = "16px Arial, sans-serif";
+  drawWrappedText(ctx, item.variant, textX, variantY, maxWidth, 19, 2);
 
-  if (typeof item.stock === "number") {
+  if (options.showStock && typeof item.stock === "number") {
     ctx.fillStyle = "#6b7280";
-    ctx.font = "11px Arial, sans-serif";
+    ctx.font = "15px Arial, sans-serif";
     ctx.fillText(`Stock: ${item.stock}`, textX, y + itemHeight - 18);
   }
 }
