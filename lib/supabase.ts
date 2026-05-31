@@ -54,7 +54,6 @@ export type Database = {
           user_id: string;
           auto_sync_enabled: boolean;
           sync_interval_minutes: number;
-          last_sync_at: string | null;
           last_sync_by_user_id: string | null;
           last_sync_by_email: string | null;
           created_at: string;
@@ -66,7 +65,6 @@ export type Database = {
             user_id: string;
             auto_sync_enabled: boolean;
             sync_interval_minutes: number;
-            last_sync_at: string | null;
             last_sync_by_user_id: string | null;
             last_sync_by_email: string | null;
             created_at: string;
@@ -77,7 +75,6 @@ export type Database = {
         Update: Partial<{
           auto_sync_enabled: boolean;
           sync_interval_minutes: number;
-          last_sync_at: string;
           last_sync_by_user_id: string | null;
           last_sync_by_email: string | null;
           updated_at: string;

@@ -5,8 +5,10 @@ import { scrapeProducts, enrichProductsWithImages } from "@/lib/scraper";
 interface DueSyncSetting {
   user_id: string;
   auto_sync_enabled: boolean;
-  last_sync_at: string | null;
+  updated_at: string | null;
+  created_at: string | null;
   sync_interval_minutes: number | null;
+  last_sync_by_email: string | null;
 }
 
 export async function GET(req: NextRequest) {
@@ -22,7 +24,9 @@ export async function GET(req: NextRequest) {
 
     const { data: settingsRows, error: settingsError } = await supabase
       .from("sync_settings")
-      .select("user_id, auto_sync_enabled, last_sync_at, sync_interval_minutes")
+      .select(
+        "user_id, auto_sync_enabled, updated_at, created_at, sync_interval_minutes, last_sync_by_email",
+      )
       .eq("auto_sync_enabled", true);
 
     if (settingsError) throw settingsError;
@@ -30,11 +34,12 @@ export async function GET(req: NextRequest) {
     const now = Date.now();
     const dueSettings = (settingsRows || []).filter(
       (settings: DueSyncSetting) => {
-        if (!settings.last_sync_at) return true;
+        const lastRunAt = settings.updated_at || settings.created_at;
+        if (!lastRunAt) return true;
 
         const intervalMinutes = settings.sync_interval_minutes || 60;
         const elapsedMinutes =
-          (now - new Date(settings.last_sync_at).getTime()) / (1000 * 60);
+          (now - new Date(lastRunAt).getTime()) / (1000 * 60);
 
         return elapsedMinutes >= intervalMinutes;
       },
@@ -52,7 +57,10 @@ export async function GET(req: NextRequest) {
 
     for (const settings of dueSettings) {
       try {
-        const result = await syncForUser(settings.user_id);
+        const result = await syncForUser(
+          settings.user_id,
+          settings.last_sync_by_email,
+        );
         results.push({
           userId: settings.user_id,
           success: true,
@@ -81,7 +89,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function syncForUser(userId: string) {
+async function syncForUser(userId: string, syncByEmail: string | null) {
   const { data: creds } = await supabase
     .from("api_credentials")
     .select("zort_cookie, zort_mid, zort_cs")
@@ -131,9 +139,8 @@ async function syncForUser(userId: string) {
   const { error: updateError } = await supabase
     .from("sync_settings")
     .update({
-      last_sync_at: syncedAt,
       last_sync_by_user_id: userId,
-      last_sync_by_email: "ระบบซิงค์อัตโนมัติ",
+      last_sync_by_email: syncByEmail || userId,
       updated_at: syncedAt,
     })
     .eq("user_id", userId);
@@ -143,7 +150,6 @@ async function syncForUser(userId: string) {
     const { error: fallbackError } = await supabase
       .from("sync_settings")
       .update({
-        last_sync_at: syncedAt,
         updated_at: syncedAt,
       })
       .eq("user_id", userId);

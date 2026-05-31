@@ -9,7 +9,8 @@ import { Header } from "@/components/Header";
 interface SyncSettings {
   auto_sync_enabled: boolean;
   sync_interval_minutes: number;
-  last_sync_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
   last_sync_by_user_id: string | null;
   last_sync_by_email: string | null;
 }
@@ -35,7 +36,8 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<SyncSettings>({
     auto_sync_enabled: false,
     sync_interval_minutes: 60,
-    last_sync_at: null,
+    created_at: null,
+    updated_at: null,
     last_sync_by_user_id: null,
     last_sync_by_email: null,
   });
@@ -54,7 +56,7 @@ export default function SettingsPage() {
     const { data, error } = await supabase
       .from("sync_settings")
       .select(
-        "auto_sync_enabled, sync_interval_minutes, last_sync_at, last_sync_by_user_id, last_sync_by_email",
+        "auto_sync_enabled, sync_interval_minutes, created_at, updated_at, last_sync_by_user_id, last_sync_by_email",
       )
       .eq("user_id", userId)
       .single();
@@ -62,7 +64,7 @@ export default function SettingsPage() {
     if (error && error.code !== "PGRST116") {
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("sync_settings")
-        .select("auto_sync_enabled, sync_interval_minutes, last_sync_at")
+        .select("auto_sync_enabled, sync_interval_minutes, created_at, updated_at")
         .eq("user_id", userId)
         .single();
 
@@ -74,7 +76,8 @@ export default function SettingsPage() {
         setSettings({
           auto_sync_enabled: fallbackData.auto_sync_enabled,
           sync_interval_minutes: fallbackData.sync_interval_minutes || 60,
-          last_sync_at: fallbackData.last_sync_at,
+          created_at: fallbackData.created_at,
+          updated_at: fallbackData.updated_at,
           last_sync_by_user_id: null,
           last_sync_by_email: null,
         });
@@ -86,7 +89,8 @@ export default function SettingsPage() {
       setSettings({
         auto_sync_enabled: data.auto_sync_enabled,
         sync_interval_minutes: data.sync_interval_minutes || 60,
-        last_sync_at: data.last_sync_at,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
         last_sync_by_user_id: data.last_sync_by_user_id,
         last_sync_by_email: data.last_sync_by_email,
       });
@@ -146,37 +150,46 @@ export default function SettingsPage() {
     setSettingsMessage("");
 
     try {
-      const { data: existing, error: existingError } = await supabase
+      const { error: deleteError } = await supabase
         .from("sync_settings")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
+        .delete()
+        .eq("user_id", user.id);
 
-      if (existingError && existingError.code !== "PGRST116") {
-        throw existingError;
+      if (deleteError) {
+        throw deleteError;
       }
 
-      if (existing?.id) {
-        const { error } = await supabase
+      const insertPayload = {
+        user_id: user.id,
+        auto_sync_enabled: settings.auto_sync_enabled,
+        sync_interval_minutes: settings.sync_interval_minutes,
+        last_sync_by_user_id: user.id,
+        last_sync_by_email: user.email || null,
+      };
+
+      const { error: insertError } = await supabase
+        .from("sync_settings")
+        .insert(insertPayload);
+
+      if (insertError) {
+        const { error: fallbackInsertError } = await supabase
           .from("sync_settings")
-          .update({
+          .insert({
+            user_id: user.id,
             auto_sync_enabled: settings.auto_sync_enabled,
             sync_interval_minutes: settings.sync_interval_minutes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
+          });
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("sync_settings").insert({
-          user_id: user.id,
-          auto_sync_enabled: settings.auto_sync_enabled,
-          sync_interval_minutes: settings.sync_interval_minutes,
-        });
-
-        if (error) throw error;
+        if (fallbackInsertError) throw fallbackInsertError;
       }
 
+      setSettings((current) => ({
+        ...current,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        last_sync_by_user_id: user.id,
+        last_sync_by_email: user.email || null,
+      }));
       setSettingsMessage("บันทึกการตั้งค่าซิงค์แล้ว");
       setTimeout(() => setSettingsMessage(""), 3000);
     } catch (error) {
@@ -224,8 +237,8 @@ export default function SettingsPage() {
     }
   };
 
-  const lastSyncText = settings.last_sync_at
-    ? new Date(settings.last_sync_at).toLocaleString("th-TH", {
+  const lastSyncText = settings.updated_at
+    ? new Date(settings.updated_at).toLocaleString("th-TH", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -233,6 +246,15 @@ export default function SettingsPage() {
         minute: "2-digit",
       })
     : "ยังไม่เคยซิงค์";
+  const lastSettingsCreatedText = settings.created_at
+    ? new Date(settings.created_at).toLocaleString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "-";
   const lastSyncByText = settings.last_sync_by_email || "ยังไม่มีข้อมูล";
 
   if (loading) {
@@ -312,51 +334,53 @@ export default function SettingsPage() {
                     />
                   </label>
 
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="text-sm font-semibold text-[#111827]">
-                        ช่วงเวลาซิงค์
-                      </label>
-                      <span className="text-sm font-semibold text-[#047857]">
-                        {settings.sync_interval_minutes} นาที
-                      </span>
+                  {settings.auto_sync_enabled && (
+                    <div>
+                      <div className="mb-2 flex items-center justify-between">
+                        <label className="text-sm font-semibold text-[#111827]">
+                          ช่วงเวลาซิงค์
+                        </label>
+                        <span className="text-sm font-semibold text-[#047857]">
+                          {settings.sync_interval_minutes} นาที
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                        {intervalOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() =>
+                              setSettings((current) => ({
+                                ...current,
+                                sync_interval_minutes: option.value,
+                              }))
+                            }
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                              settings.sync_interval_minutes === option.value
+                                ? "border-[#10B981] bg-[#ECFDF5] text-[#047857]"
+                                : "border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#10B981]"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="range"
+                        min="5"
+                        max="1440"
+                        step="5"
+                        value={settings.sync_interval_minutes}
+                        onChange={(e) =>
+                          setSettings((current) => ({
+                            ...current,
+                            sync_interval_minutes: Number(e.target.value),
+                          }))
+                        }
+                        className="mt-4 w-full"
+                      />
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-                      {intervalOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() =>
-                            setSettings((current) => ({
-                              ...current,
-                              sync_interval_minutes: option.value,
-                            }))
-                          }
-                          className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                            settings.sync_interval_minutes === option.value
-                              ? "border-[#10B981] bg-[#ECFDF5] text-[#047857]"
-                              : "border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#10B981]"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                    <input
-                      type="range"
-                      min="5"
-                      max="1440"
-                      step="5"
-                      value={settings.sync_interval_minutes}
-                      onChange={(e) =>
-                        setSettings((current) => ({
-                          ...current,
-                          sync_interval_minutes: Number(e.target.value),
-                        }))
-                      }
-                      className="mt-4 w-full"
-                    />
-                  </div>
+                  )}
 
                   <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -471,47 +495,100 @@ export default function SettingsPage() {
             </div>
 
             <aside className="space-y-5">
-              <section className="rounded-lg border border-[#E5E7EB] bg-white p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-[#111827]">
-                  สถานะระบบ
-                </h3>
-                <div className="mt-4 space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#6B7280]">Cron schedule</span>
-                    <span className="font-semibold text-[#111827]">ทุก 5 นาที</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#6B7280]">Auto sync</span>
+              <section className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
+                <div className="border-b border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3 sm:px-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#111827]">
+                        สถานะระบบ
+                      </h3>
+                      <p className="mt-0.5 text-xs text-[#6B7280]">
+                        ภาพรวมการซิงค์ล่าสุด
+                      </p>
+                    </div>
                     <span
-                      className={
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                         settings.auto_sync_enabled
-                          ? "font-semibold text-[#047857]"
-                          : "font-semibold text-[#6B7280]"
-                      }
+                          ? "bg-[#D1FAE5] text-[#047857]"
+                          : "bg-[#F3F4F6] text-[#6B7280]"
+                      }`}
                     >
-                      {settings.auto_sync_enabled ? "พร้อมทำงาน" : "ปิดอยู่"}
+                      {settings.auto_sync_enabled ? "Active" : "Off"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[#6B7280]">Last sync</span>
-                    <span className="min-w-0 truncate text-right font-semibold text-[#111827]">
-                      {settings.last_sync_at ? lastSyncText : "-"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[#6B7280]">Sync by</span>
-                    <span className="min-w-0 truncate text-right font-semibold text-[#111827]">
-                      {lastSyncByText}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#6B7280]">Cookie</span>
+                </div>
+
+                <div className="space-y-3 p-4 sm:p-5">
+                  {!settings.auto_sync_enabled ? (
+                    <div className="rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-4 text-center">
+                      <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF]">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M18.364 18.364A9 9 0 0 1 5.636 5.636m12.728 12.728A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"
+                          />
+                        </svg>
+                      </div>
+                      <div className="text-sm font-semibold text-[#111827]">
+                        ไม่มีการ sync
+                      </div>
+                      <div className="mt-1 text-xs text-[#6B7280]">
+                        ปิดการ sync อยู่
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-3">
+                        <div className="text-xs font-medium text-[#6B7280]">
+                          รอบตรวจสอบ
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-[#111827]">
+                          ทุก 5 นาที
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-3">
+                        <div className="text-xs font-medium text-[#6B7280]">
+                          Last sync
+                        </div>
+                        <div className="mt-1 break-words text-sm font-semibold leading-5 text-[#111827]">
+                          {lastSettingsCreatedText}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-3">
+                        <div className="text-xs font-medium text-[#6B7280]">
+                          Sync by
+                        </div>
+                        <div className="mt-1 break-words text-sm font-semibold leading-5 text-[#111827]">
+                          {lastSyncByText}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-3">
+                    <div>
+                      <div className="text-xs font-medium text-[#6B7280]">
+                        Cookie
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-[#111827]">
+                        Zortout
+                      </div>
+                    </div>
                     <span
-                      className={
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                         credentials.zort_cookie.trim()
-                          ? "font-semibold text-[#047857]"
-                          : "font-semibold text-red-600"
-                      }
+                          ? "bg-[#D1FAE5] text-[#047857]"
+                          : "bg-red-50 text-red-600"
+                      }`}
                     >
                       {credentials.zort_cookie.trim() ? "ตั้งค่าแล้ว" : "ยังไม่มี"}
                     </span>

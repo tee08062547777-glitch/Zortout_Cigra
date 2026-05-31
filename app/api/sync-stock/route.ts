@@ -98,7 +98,6 @@ export async function POST(req: NextRequest) {
 
     const syncedAt = new Date().toISOString();
     const syncMetadata = {
-      last_sync_at: syncedAt,
       last_sync_by_user_id: user.id,
       last_sync_by_email: user.email || null,
       updated_at: syncedAt,
@@ -114,7 +113,6 @@ export async function POST(req: NextRequest) {
       const { error: fallbackError } = await supabase
         .from("sync_settings")
         .update({
-          last_sync_at: syncedAt,
           updated_at: syncedAt,
         })
         .eq("user_id", user.id);
