@@ -5,17 +5,11 @@ import { useState, useCallback } from "react";
 interface FilterBarProps {
   onSearch: (search: string) => void;
   onMinStockChange: (min: number) => void;
-  onShowQtyChange: (show: boolean) => void;
 }
 
-export function FilterBar({
-  onSearch,
-  onMinStockChange,
-  onShowQtyChange,
-}: FilterBarProps) {
+export function FilterBar({ onSearch, onMinStockChange }: FilterBarProps) {
   const [search, setSearch] = useState("");
   const [minStock, setMinStock] = useState("1");
-  const [showQty, setShowQty] = useState(false);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,15 +27,6 @@ export function FilterBar({
       onMinStockChange(Number(value) || 0);
     },
     [onMinStockChange],
-  );
-
-  const handleShowQtyChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const checked = e.target.checked;
-      setShowQty(checked);
-      onShowQtyChange(checked);
-    },
-    [onShowQtyChange],
   );
 
   return (
@@ -83,16 +68,6 @@ export function FilterBar({
         />
         <label className="whitespace-nowrap text-xs text-[#6B7280]">ชิ้น</label>
       </div>
-
-      <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs text-[#6B7280]">
-        <input
-          type="checkbox"
-          checked={showQty}
-          onChange={handleShowQtyChange}
-          className="h-4 w-4"
-        />
-        แสดงจำนวน
-      </label>
     </div>
   );
 }

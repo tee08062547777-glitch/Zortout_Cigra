@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -10,11 +12,13 @@ export function SignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const router = useRouter();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (password !== confirmPassword) {
       setError("รหัสผ่านไม่ตรงกัน");
@@ -29,35 +33,31 @@ export function SignUpForm() {
     setLoading(true);
 
     try {
-      // Sign up
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (signUpError) throw signUpError;
-      if (!data?.user) throw new Error("Failed to create user");
+      if (!data?.user) throw new Error("ไม่สามารถสร้างบัญชีได้");
 
-      const userId = data.user.id;
-
-      // Create sync settings for new user
       const { error: syncError } = await supabase.from("sync_settings").insert({
-        user_id: userId,
+        user_id: data.user.id,
         auto_sync_enabled: false,
         sync_interval_minutes: 60,
       });
 
       if (syncError) {
         console.error("Sync settings error:", syncError);
-        // Continue anyway - sync settings can be created later
       }
 
-      alert("บัญชีถูกสร้างสำเร็จ! กรุณาเข้าสู่ระบบ");
-      router.push("/login");
+      setSuccess("สมัครใช้งานสำเร็จ กำลังพาไปหน้าเข้าสู่ระบบ...");
+      window.setTimeout(() => {
+        router.push("/login");
+      }, 1200);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message || "เกิดข้อผิดพลาด");
-      console.error("SignUp error:", err);
     } finally {
       setLoading(false);
     }
@@ -66,77 +66,96 @@ export function SignUpForm() {
   return (
     <form
       onSubmit={handleSignUp}
-      className="w-full max-w-sm bg-white rounded-2xl p-8 shadow-lg"
+      className="w-full max-w-[420px] rounded-2xl border border-[#E5E7EB] bg-white p-7 shadow-[0_24px_80px_rgba(15,23,42,0.10)]"
     >
-      <h1 className="text-2xl font-bold mb-2 text-[#111827]">สมัครสมาชิก</h1>
-      <p className="text-sm text-[#6B7280] mb-6">
-        สร้างบัญชีเพื่อจัดการสต็อกสินค้า
-      </p>
+      <div className="mb-7 flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F8FAFC]">
+          <Image
+            src="/zort-logo.svg"
+            alt="Zort Stock"
+            width={44}
+            height={34}
+            priority
+          />
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-[#111827]">สมัครใช้งาน</h1>
+          <p className="text-sm text-[#6B7280]">สร้างบัญชีสำหรับจัดการสต็อก</p>
+        </div>
+      </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 text-xs rounded-lg p-3 mb-4">
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="mb-4">
-        <label className="block text-xs font-semibold text-[#111827] mb-2">
-          อีเมล
-        </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="user@example.com"
-          required
-          className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm outline-none focus:border-[#10B981]"
-        />
-      </div>
+      {success && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {success}
+        </div>
+      )}
 
-      <div className="mb-4">
-        <label className="block text-xs font-semibold text-[#111827] mb-2">
-          รหัสผ่าน
-        </label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          required
-          className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm outline-none focus:border-[#10B981]"
-        />
-      </div>
+      <div className="space-y-4">
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#111827]">
+            อีเมล
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="user@example.com"
+            required
+            className="h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#111827] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0EA5E9] focus:ring-4 focus:ring-[#E0F2FE]"
+          />
+        </div>
 
-      <div className="mb-6">
-        <label className="block text-xs font-semibold text-[#111827] mb-2">
-          ยืนยันรหัสผ่าน
-        </label>
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="••••••••"
-          required
-          className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm outline-none focus:border-[#10B981]"
-        />
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#111827]">
+            รหัสผ่าน
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="อย่างน้อย 6 ตัวอักษร"
+            required
+            className="h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#111827] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0EA5E9] focus:ring-4 focus:ring-[#E0F2FE]"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#111827]">
+            ยืนยันรหัสผ่าน
+          </label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="กรอกรหัสผ่านอีกครั้ง"
+            required
+            className="h-11 w-full rounded-xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#111827] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0EA5E9] focus:ring-4 focus:ring-[#E0F2FE]"
+          />
+        </div>
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#10B981] text-white font-semibold py-2 rounded-lg hover:bg-[#059669] transition-colors disabled:opacity-50"
+        className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0F766E] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "กำลังสมัครสมาชิก..." : "สมัครสมาชิก"}
+        {loading && (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+        )}
+        <span>{loading ? "กำลังสมัครใช้งาน..." : "สมัครใช้งาน"}</span>
       </button>
 
-      <p className="text-xs text-[#6B7280] text-center mt-4">
+      <p className="mt-5 text-center text-sm text-[#6B7280]">
         มีบัญชีแล้ว?{" "}
-        <a
-          href="/login"
-          className="text-[#10B981] font-semibold hover:underline"
-        >
+        <Link href="/login" className="font-semibold text-[#0F766E] hover:underline">
           เข้าสู่ระบบ
-        </a>
+        </Link>
       </p>
     </form>
   );

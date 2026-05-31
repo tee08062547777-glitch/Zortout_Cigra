@@ -14,6 +14,7 @@ interface SelectedItem {
 interface RightPanelProps {
   selectedItems: SelectedItem[];
   showQty: boolean;
+  onShowQtyChange: (show: boolean) => void;
   onViewList: () => void;
   onRemoveItem: (key: string) => void;
   onClearItems: () => void;
@@ -22,6 +23,7 @@ interface RightPanelProps {
 export function RightPanel({
   selectedItems,
   showQty,
+  onShowQtyChange,
   onViewList,
   onRemoveItem,
   onClearItems,
@@ -62,7 +64,7 @@ export function RightPanel({
   return (
     <div className="sticky top-20 flex max-h-[620px] w-72 flex-shrink-0 flex-col overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-sm">
       <div className="border-b border-[#E5E7EB] p-3.5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold text-[#111827]">
               รายการที่เลือก
@@ -80,6 +82,16 @@ export function RightPanel({
             ล้างทั้งหมด
           </button>
         </div>
+
+        <label className="mt-3 flex cursor-pointer items-center justify-between rounded-lg bg-[#F8FAFC] px-3 py-2 text-xs text-[#6B7280]">
+          <span>แสดงจำนวนในลิสต์และรูป</span>
+          <input
+            type="checkbox"
+            checked={showQty}
+            onChange={(e) => onShowQtyChange(e.target.checked)}
+            className="h-4 w-4"
+          />
+        </label>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">

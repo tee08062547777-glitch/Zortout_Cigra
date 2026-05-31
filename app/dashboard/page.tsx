@@ -86,6 +86,7 @@ export default function DashboardPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [syncLoading, setSyncLoading] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const [controlsCollapsed, setControlsCollapsed] = useState(false);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -191,6 +192,29 @@ export default function DashboardPage() {
     {} as Record<string, Product[]>,
   );
 
+  const filteredProductKeys = filteredProducts.map(
+    (p) => `${p.pid}||${p.variant || ""}`,
+  );
+  const allFilteredSelected =
+    filteredProductKeys.length > 0 &&
+    filteredProductKeys.every((key) => selectedItems.has(key));
+
+  const selectFilteredProducts = () => {
+    setSelectedItems((currentSelected) => {
+      const newSelected = new Set(currentSelected);
+      filteredProductKeys.forEach((key) => newSelected.add(key));
+      return newSelected;
+    });
+  };
+
+  const clearFilteredProducts = () => {
+    setSelectedItems((currentSelected) => {
+      const newSelected = new Set(currentSelected);
+      filteredProductKeys.forEach((key) => newSelected.delete(key));
+      return newSelected;
+    });
+  };
+
   const selectedProducts = Array.from(selectedItems)
     .map((key) => {
       const [pid, variant] = key.split("||");
@@ -257,35 +281,96 @@ export default function DashboardPage() {
         <div className="flex-1 overflow-auto px-[22px] py-[18px] pb-20">
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_18rem] gap-[18px]">
             <div className="flex-1 min-w-0">
-              <FilterBar
-                onSearch={setSearch}
-                onMinStockChange={setMinStock}
-                onShowQtyChange={setShowQty}
-              />
+              <div className="sticky top-0 z-30 mb-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]/95 p-2.5 shadow-sm backdrop-blur">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-[#111827]">
+                      ตัวกรองสินค้า
+                    </div>
+                    <div className="text-xs text-[#6B7280]">
+                      แสดง {filteredProducts.length} รายการ จากทั้งหมด{" "}
+                      {products.length} รายการ
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setControlsCollapsed((current) => !current)
+                    }
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-[#10B981] hover:text-[#059669]"
+                  >
+                    <svg
+                      className={`h-3.5 w-3.5 transition-transform ${
+                        controlsCollapsed ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="m6 9 6 6 6-6"
+                      />
+                    </svg>
+                    {controlsCollapsed ? "แสดงตัวกรอง" : "ซ่อนตัวกรอง"}
+                  </button>
+                </div>
 
-              <CategoryPills
-                pills={[
-                  { id: "all", label: "ทั้งหมด", icon: "\u{1F4E6}" },
-                  ...CATEGORIES,
-                ]}
-                active={activeCategory}
-                onSelect={setActiveCategory}
-              />
+                {!controlsCollapsed && (
+                  <>
+                    <FilterBar
+                      onSearch={setSearch}
+                      onMinStockChange={setMinStock}
+                    />
 
-              <Stats
-                inStock={products.filter((p) => p.stock > minStock).length}
-                selected={selectedItems.size}
-                groups={Object.keys(groupedProducts).length}
-              />
+                    <CategoryPills
+                      pills={[
+                        { id: "all", label: "ทั้งหมด", icon: "\u{1F4E6}" },
+                        ...CATEGORIES,
+                      ]}
+                      active={activeCategory}
+                      onSelect={setActiveCategory}
+                    />
 
-              <div className="mb-2">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <input type="checkbox" className="w-4 h-4" />
-                  <span className="text-xs text-[#6B7280]">เลือกทั้งหมด</span>
-                  <button className="px-3 py-1 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:border-[#10B981] hover:text-[#10B981]">
+                    <Stats
+                      inStock={products.filter((p) => p.stock > minStock).length}
+                      selected={selectedItems.size}
+                      groups={Object.keys(groupedProducts).length}
+                    />
+                  </>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      onChange={(e) =>
+                        e.target.checked
+                          ? selectFilteredProducts()
+                          : clearFilteredProducts()
+                      }
+                      disabled={filteredProductKeys.length === 0}
+                      className="h-4 w-4"
+                    />
+                    เลือกทั้งหมดที่แสดง
+                  </label>
+                  <button
+                    type="button"
+                    onClick={selectFilteredProducts}
+                    disabled={filteredProductKeys.length === 0}
+                    className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs text-[#6B7280] transition-colors hover:border-[#10B981] hover:text-[#10B981] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
                     เลือกทั้งหมด
                   </button>
-                  <button className="px-3 py-1 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:border-[#10B981] hover:text-[#10B981]">
+                  <button
+                    type="button"
+                    onClick={clearFilteredProducts}
+                    disabled={filteredProductKeys.length === 0}
+                    className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs text-[#6B7280] transition-colors hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
                     ยกเลิกทั้งหมด
                   </button>
                 </div>
@@ -322,6 +407,7 @@ export default function DashboardPage() {
             <RightPanel
               selectedItems={selectedItemsForPanel}
               showQty={showQty}
+              onShowQtyChange={setShowQty}
               onViewList={() => setProductModalOpen(true)}
               onRemoveItem={(key) => {
                 setSelectedItems((currentSelected) => {

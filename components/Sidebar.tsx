@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -61,17 +62,25 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed bottom-0 left-0 top-0 z-50 flex w-[200px] flex-col border-r border-[#E5E7EB] bg-white">
-      <div className="border-b border-[#E5E7EB] p-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#10B981] text-sm font-semibold text-white">
-            Z
+    <aside className="fixed bottom-0 left-0 top-0 z-50 flex w-[210px] flex-col border-r border-[#E5E7EB] bg-white">
+      <div className="border-b border-[#E5E7EB] px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F8FAFC]">
+            <Image
+              src="/zort-logo.svg"
+              alt="Zort Stock"
+              width={42}
+              height={32}
+              priority
+            />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold leading-tight text-[#111827]">
+            <div className="truncate text-sm font-bold leading-tight text-[#111827]">
               Zort Stock
             </div>
-            <div className="text-xs text-[#6B7280]">Stock Manager</div>
+            <div className="text-xs font-medium text-[#6B7280]">
+              Dashboard
+            </div>
           </div>
         </div>
       </div>
@@ -84,15 +93,15 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                 active
-                  ? "bg-[#ECFDF5] text-[#047857]"
+                  ? "bg-[#E0F2FE] text-[#075985]"
                   : "text-[#6B7280] hover:bg-[#F8FAFC] hover:text-[#111827]"
               }`}
             >
               <span
-                className={`flex h-7 w-7 items-center justify-center rounded-md ${
-                  active ? "bg-white text-[#059669]" : "bg-[#F8FAFC]"
+                className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                  active ? "bg-white text-[#0284C7]" : "bg-[#F8FAFC]"
                 }`}
               >
                 {item.icon}
@@ -107,9 +116,9 @@ export function Sidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-[#6B7280] transition-colors hover:bg-red-50 hover:text-red-600"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#6B7280] transition-colors hover:bg-red-50 hover:text-red-600"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#F8FAFC]">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F8FAFC]">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -126,7 +135,9 @@ export function Sidebar() {
           </span>
           <span>ออกจากระบบ</span>
         </button>
-        <div className="mt-3 px-3 text-xs text-[#9CA3AF]">v4.0</div>
+        <div className="mt-3 px-3 text-xs font-medium text-[#9CA3AF]">
+          v4.0
+        </div>
       </div>
     </aside>
   );

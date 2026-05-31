@@ -2,8 +2,10 @@ import { LoginForm } from "@/components/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] to-[#E0F2FE] flex items-center justify-center p-4">
-      <LoginForm />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-[#0B1220] p-4 text-[#111827]">
+      <div className="w-full max-w-[420px]">
+        <LoginForm />
+      </div>
+    </main>
   );
 }
