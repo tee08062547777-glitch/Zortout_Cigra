@@ -87,6 +87,9 @@ export default function DashboardPage() {
   const [syncLoading, setSyncLoading] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [controlsCollapsed, setControlsCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
 
   const loadProducts = useCallback(async () => {
     try {
@@ -389,6 +392,18 @@ export default function DashboardPage() {
                       stock: p.stock,
                     }))}
                     selectedItems={selectedItems}
+                    isCollapsed={collapsedGroups.has(group)}
+                    onToggleCollapse={() => {
+                      setCollapsedGroups((currentCollapsed) => {
+                        const newCollapsed = new Set(currentCollapsed);
+                        if (newCollapsed.has(group)) {
+                          newCollapsed.delete(group);
+                        } else {
+                          newCollapsed.add(group);
+                        }
+                        return newCollapsed;
+                      });
+                    }}
                     onSelect={(key, checked) => {
                       setSelectedItems((currentSelected) => {
                         const newSelected = new Set(currentSelected);

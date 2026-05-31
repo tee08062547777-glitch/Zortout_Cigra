@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+
 interface CategoryPill {
   id: string;
   label: string;
@@ -13,10 +15,68 @@ interface CategoryPillsProps {
 }
 
 export function CategoryPills({ pills, active, onSelect }: CategoryPillsProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    setCanScrollLeft(container.scrollLeft > 2);
+    setCanScrollRight(container.scrollLeft < maxScrollLeft - 2);
+  }, []);
+
+  useEffect(() => {
+    updateScrollButtons();
+    window.addEventListener("resize", updateScrollButtons);
+
+    return () => {
+      window.removeEventListener("resize", updateScrollButtons);
+    };
+  }, [pills.length, updateScrollButtons]);
+
+  const scrollCategories = (direction: "left" | "right") => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    container.scrollBy({
+      left: direction === "left" ? -container.clientWidth * 0.75 : container.clientWidth * 0.75,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <div className="relative mb-3.5 min-w-0 max-w-full overflow-hidden">
-      <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-8 bg-gradient-to-l from-[#F8FAFC] to-transparent" />
-      <div className="flex min-w-0 max-w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="relative mb-3.5 min-w-0 max-w-full overflow-hidden px-9">
+      <button
+        type="button"
+        onClick={() => scrollCategories("left")}
+        disabled={!canScrollLeft}
+        aria-label="เลื่อนหมวดหมู่ไปทางซ้าย"
+        className="absolute left-0 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] shadow-sm transition-colors hover:border-[#10B981] hover:text-[#059669] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="m15 19-7-7 7-7"
+          />
+        </svg>
+      </button>
+      <div className="pointer-events-none absolute bottom-0 left-9 top-0 z-10 w-8 bg-gradient-to-r from-[#F8FAFC] to-transparent" />
+      <div className="pointer-events-none absolute bottom-0 right-9 top-0 z-10 w-8 bg-gradient-to-l from-[#F8FAFC] to-transparent" />
+      <div
+        ref={scrollRef}
+        onScroll={updateScrollButtons}
+        className="flex min-w-0 max-w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
         {pills.map((pill) => (
           <button
             key={pill.id}
@@ -33,6 +93,27 @@ export function CategoryPills({ pills, active, onSelect }: CategoryPillsProps) {
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        onClick={() => scrollCategories("right")}
+        disabled={!canScrollRight}
+        aria-label="เลื่อนหมวดหมู่ไปทางขวา"
+        className="absolute right-0 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#6B7280] shadow-sm transition-colors hover:border-[#10B981] hover:text-[#059669] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="m9 5 7 7-7 7"
+          />
+        </svg>
+      </button>
     </div>
   );
 }
