@@ -40,7 +40,21 @@ const CATEGORIES = [
     id: "pod-refill",
     label: "หัวพอต / น้ำยาหัว",
     icon: "\u{1F4A7}",
-    keywords: ["หัว", "refill", "cartridge", "pod pack", "หัวพอต", "น้ำยาหัว"],
+    keywords: [
+      "หัว",
+      "refill",
+      "pod pack",
+      "หัวพอต",
+      "น้ำยาหัว",
+      "หัวน้ำยา",
+      "หัวน้ำยา infy plus",
+      "หัวพอต relx",
+      "หัวพอต relx pro",
+      "หัวน้ำยา marbo zero pod",
+      "หัวน้ำยา cliq",
+      "หัวน้ำยา one punthai pod",
+      "หัวน้ำยา vazer one pod",
+    ],
   },
   {
     id: "saltnic",
@@ -58,19 +72,70 @@ const CATEGORIES = [
     id: "coil-atom",
     label: "คอยล์ / อะตอม",
     icon: "\u{1F527}",
-    keywords: ["coil", "คอยล์", "atom", "อะตอม", "rda", "rta", "rdta"],
+    keywords: [
+      "coil",
+      "คอยล์",
+      "atom",
+      "อะตอม",
+      "rda",
+      "rta",
+      "rdta",
+      "battlestar baby cartridge",
+      "bmor fuse cartridge",
+      "caliburn a2s cartridge",
+      "freemax onnix cartridge",
+      "lost vape ursa mini empty cartridge",
+      "jellybox f cartridge",
+      "oxva origin x cartridge",
+      "jellybox z cartridge",
+      "pnp x cartridge dtl",
+      "pnp x cartridge mtl",
+      "rincoe jellybox nano cartridge",
+      "smoant charon baby plus cartridge",
+      "smoant santi cartridge",
+      "smok g-priv empty cartridge",
+      "smok nexmesh cartridge",
+      "smok nfix replacement cartridge",
+      "smok nord 2 cartridge",
+      "smok nord 50w cartridge",
+      "smok nord replacement cartridge",
+      "smok nord x cartridge",
+      "smok rpm nord",
+      "smok scar p5 cartridge",
+      "smok stick r22 cartridge",
+      "tank smok rpm 85",
+      "tank smok rpm 100",
+      "uwell caliburn a2 cartridge",
+      "uwell caliburn g cartridge",
+      "uwell caliburn koko cartridge",
+      "uwell havok v1 cartridge",
+      "vandyvape jackaroo cartridge",
+      "vaporesso luxe pm40 cartridge",
+      "vaporesso xiron cartridge",
+      "voopoo pnp",
+      "voopoo tpp cartridge",
+      "voopoo tpp-x cartridge",
+      "voopoo vinci 2 replacement cartridge",
+      "voopoo vinci cartridge",
+      "voopoo vinci v2 cartridge",
+      "voopoo vmate cartridge v2",
+    ],
   },
   {
     id: "accessory",
     label: "อุปกรณ์เสริม",
     icon: "\u{1F50B}",
-    keywords: ["battery", "ถ่าน", "charger", "ชาร์จ", "สาย", "case", "accessory", "อุปกรณ์"],
-  },
-  {
-    id: "other",
-    label: "อื่นๆ",
-    icon: "\u{1F4CC}",
-    keywords: [],
+    keywords: [
+      "battery",
+      "ถ่าน",
+      "charger",
+      "ชาร์จ",
+      "สาย",
+      "สายคล้องพอต",
+      "case",
+      "accessory",
+      "อุปกรณ์",
+    ],
   },
 ];
 
@@ -161,12 +226,23 @@ export default function DashboardPage() {
       " " +
       (product.variant || "")
     ).toLowerCase();
+    let matchedCategory = "accessory";
+    let matchedKeywordLength = 0;
+
     for (const cat of CATEGORIES) {
-      if (cat.keywords.some((kw) => text.includes(kw.toLowerCase()))) {
-        return cat.id;
+      for (const keyword of cat.keywords) {
+        const normalizedKeyword = keyword.toLowerCase();
+        if (
+          normalizedKeyword.length > matchedKeywordLength &&
+          text.includes(normalizedKeyword)
+        ) {
+          matchedCategory = cat.id;
+          matchedKeywordLength = normalizedKeyword.length;
+        }
       }
     }
-    return "other";
+
+    return matchedCategory;
   };
 
   const filteredProducts = products.filter((p) => {
