@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -67,8 +68,11 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleLogin}
-      className="w-full max-w-[420px] rounded-2xl border border-[#E5E7EB] bg-white p-7 shadow-[0_24px_80px_rgba(15,23,42,0.10)]"
+      className="w-full max-w-[420px] rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] sm:p-7"
     >
+      <div className="mb-4 flex justify-end">
+        <ThemeToggle />
+      </div>
       <div className="mb-7 flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F8FAFC]">
           <Image

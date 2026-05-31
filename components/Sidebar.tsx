@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -55,6 +56,18 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("sidebar-collapsed") === "true";
+  });
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--sidebar-offset",
+      collapsed ? "68px" : "210px",
+    );
+    window.localStorage.setItem("sidebar-collapsed", String(collapsed));
+  }, [collapsed]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -62,10 +75,28 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed bottom-0 left-0 top-0 z-50 flex w-[210px] flex-col border-r border-[#E5E7EB] bg-white">
-      <div className="border-b border-[#E5E7EB] px-4 py-4">
+    <aside
+      className={`fixed bottom-0 left-0 right-0 z-50 flex h-16 flex-row border-t border-[#E5E7EB] bg-white shadow-sm transition-[width] duration-200 md:right-auto md:top-0 md:h-auto md:flex-col md:border-r md:border-t-0 ${
+        collapsed ? "md:w-[68px]" : "md:w-[210px]"
+      }`}
+    >
+      <div
+        className={`hidden border-b border-[#E5E7EB] py-4 md:block ${
+          collapsed ? "px-3" : "px-4"
+        }`}
+      >
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F8FAFC]">
+          <button
+            type="button"
+            onClick={() => collapsed && setCollapsed(false)}
+            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] transition-colors ${
+              collapsed
+                ? "cursor-pointer hover:border-[#0EA5E9] hover:bg-[#F0F9FF]"
+                : "cursor-default"
+            }`}
+            aria-label={collapsed ? "เปิดเมนู" : "Zort Stock"}
+            title={collapsed ? "เปิดเมนู" : "Zort Stock"}
+          >
             <Image
               src="/zort-logo.svg"
               alt="Zort Stock"
@@ -73,8 +104,8 @@ export function Sidebar() {
               height={32}
               priority
             />
-          </div>
-          <div className="min-w-0">
+          </button>
+          <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
             <div className="truncate text-sm font-bold leading-tight text-[#111827]">
               Zort Stock
             </div>
@@ -82,10 +113,33 @@ export function Sidebar() {
               Dashboard
             </div>
           </div>
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={() => setCollapsed(true)}
+              className="ml-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[#94A3B8] transition-colors hover:bg-[#F1F5F9] hover:text-[#0F172A]"
+              aria-label="ซ่อนเมนู"
+              title="ซ่อนเมนู"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19 8 12l7-7"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 p-2.5">
+      <nav className="flex flex-1 items-center justify-around gap-1 p-2 md:block md:space-y-1 md:p-2.5">
         {navItems.map((item) => {
           const active = pathname === item.href;
 
@@ -93,7 +147,12 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+              title={collapsed ? item.label : undefined}
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-2 py-1.5 text-xs font-semibold transition-colors md:flex-row md:text-sm ${
+                collapsed
+                  ? "md:justify-center md:px-0 md:py-2.5"
+                  : "md:gap-2.5 md:px-3 md:py-2.5"
+              } ${
                 active
                   ? "bg-[#E0F2FE] text-[#075985]"
                   : "text-[#6B7280] hover:bg-[#F8FAFC] hover:text-[#111827]"
@@ -106,17 +165,26 @@ export function Sidebar() {
               >
                 {item.icon}
               </span>
-              <span className="truncate">{item.label}</span>
+              <span
+                className={`mt-0.5 max-w-full truncate md:mt-0 ${
+                  collapsed ? "md:hidden" : "md:block"
+                }`}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-[#E5E7EB] p-3">
+      <div className="flex items-center border-l border-[#E5E7EB] p-2 md:block md:border-l-0 md:border-t md:p-3">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#6B7280] transition-colors hover:bg-red-50 hover:text-red-600"
+          className={`flex items-center justify-center rounded-xl px-2 py-2 text-sm font-semibold text-[#6B7280] transition-colors hover:bg-red-50 hover:text-red-600 md:w-full ${
+            collapsed ? "md:px-0 md:py-2.5" : "md:gap-2.5 md:px-3 md:py-2.5"
+          }`}
+          title="ออกจากระบบ"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F8FAFC]">
             <svg
@@ -133,9 +201,15 @@ export function Sidebar() {
               />
             </svg>
           </span>
-          <span>ออกจากระบบ</span>
+          <span className={collapsed ? "hidden" : "hidden md:block"}>
+            ออกจากระบบ
+          </span>
         </button>
-        <div className="mt-3 px-3 text-xs font-medium text-[#9CA3AF]">
+        <div
+          className={`mt-3 hidden px-3 text-xs font-medium text-[#9CA3AF] ${
+            collapsed ? "md:hidden" : "md:block"
+          }`}
+        >
           v4.0
         </div>
       </div>

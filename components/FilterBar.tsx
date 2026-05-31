@@ -30,8 +30,8 @@ export function FilterBar({ onSearch, onMinStockChange }: FilterBarProps) {
   );
 
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-lg border border-[#E5E7EB] bg-white p-2.5">
-      <div className="relative min-w-[150px] flex-1">
+    <div className="mb-3 flex flex-col gap-2.5 rounded-lg border border-[#E5E7EB] bg-white p-2.5 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="relative min-w-0 flex-1 sm:min-w-[150px]">
         <svg
           className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF]"
           fill="none"
@@ -54,7 +54,7 @@ export function FilterBar({ onSearch, onMinStockChange }: FilterBarProps) {
         />
       </div>
 
-      <div className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] px-2.5 py-1.5">
+      <div className="flex items-center justify-between gap-1.5 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] px-2.5 py-1.5 sm:justify-start">
         <label className="whitespace-nowrap text-xs text-[#6B7280]">
           มากกว่า
         </label>
@@ -64,7 +64,7 @@ export function FilterBar({ onSearch, onMinStockChange }: FilterBarProps) {
           onChange={handleMinStockChange}
           min="0"
           step="1"
-          className="w-12 border-none bg-transparent text-center font-sans text-xs text-[#111827] outline-none"
+          className="w-16 border-none bg-transparent text-center font-sans text-xs text-[#111827] outline-none sm:w-12"
         />
         <label className="whitespace-nowrap text-xs text-[#6B7280]">ชิ้น</label>
       </div>

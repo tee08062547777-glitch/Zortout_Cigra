@@ -244,10 +244,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       <Sidebar />
 
-      <div className="ml-[200px] flex-1 flex flex-col min-h-screen">
+      <div className="flex min-h-screen flex-1 flex-col pb-16 transition-[margin] duration-200 md:ml-[var(--sidebar-offset,210px)] md:pb-0">
         <Header
           title="สินค้าพร้อมส่ง"
           subtitle="เลือกสินค้าที่ต้องการแสดงในลิสต์"
@@ -258,7 +258,7 @@ export default function DashboardPage() {
           <button
             onClick={() => handleSync()}
             disabled={syncLoading}
-            className="flex items-center gap-1.5 bg-[#3B82F6] text-white border-none rounded-lg px-4 py-2 font-sans text-sm font-medium cursor-pointer hover:bg-[#2563EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 rounded-lg border-none bg-[#3B82F6] px-3 py-2 font-sans text-xs font-medium text-white transition-colors hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
           >
             <svg
               className="w-3.5 h-3.5"
@@ -278,12 +278,12 @@ export default function DashboardPage() {
 
         </Header>
 
-        <div className="flex-1 overflow-auto px-[22px] py-[18px] pb-20">
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_18rem] gap-[18px]">
+        <div className="flex-1 overflow-auto px-3 py-3 pb-20 sm:px-[22px] sm:py-[18px]">
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-[18px]">
             <div className="flex-1 min-w-0">
               <div className="sticky top-0 z-30 mb-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]/95 p-2.5 shadow-sm backdrop-blur">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <div>
+                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                  <div className="min-w-0">
                     <div className="text-sm font-semibold text-[#111827]">
                       ตัวกรองสินค้า
                     </div>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                     onClick={() =>
                       setControlsCollapsed((current) => !current)
                     }
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-[#10B981] hover:text-[#059669]"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-[#10B981] hover:text-[#059669] sm:w-auto"
                   >
                     <svg
                       className={`h-3.5 w-3.5 transition-transform ${

@@ -62,7 +62,7 @@ export function RightPanel({
   };
 
   return (
-    <div className="sticky top-20 flex max-h-[620px] w-72 flex-shrink-0 flex-col overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-sm">
+    <div className="order-first flex max-h-[70vh] min-h-[360px] w-full flex-shrink-0 flex-col overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-sm lg:sticky lg:top-20 lg:order-none lg:max-h-[620px] lg:w-72">
       <div className="border-b border-[#E5E7EB] p-3.5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -83,7 +83,7 @@ export function RightPanel({
           </button>
         </div>
 
-        <label className="mt-3 flex cursor-pointer items-center justify-between rounded-lg bg-[#F8FAFC] px-3 py-2 text-xs text-[#6B7280]">
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-lg bg-[#F8FAFC] px-3 py-2 text-xs text-[#6B7280]">
           <span>แสดงจำนวนในลิสต์และรูป</span>
           <input
             type="checkbox"
@@ -96,10 +96,42 @@ export function RightPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {!hasSelection ? (
-          <div className="rounded-lg border border-dashed border-[#D1D5DB] bg-[#F8FAFC] p-6 text-center text-xs leading-6 text-[#9CA3AF]">
-            ยังไม่ได้เลือกสินค้า
-            <br />
-            ติ๊กสินค้าจากตารางด้านซ้าย
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex flex-col items-center px-5 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] text-[#94A3B8]">
+                <svg
+                  className="h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M3 4h2l2.2 10.2A2 2 0 0 0 9.16 16h7.24a2 2 0 0 0 1.92-1.45L20 8H7"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M9 20h.01M17 20h.01"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M10 11h4"
+                  />
+                </svg>
+              </div>
+              <div className="text-sm font-semibold text-[#64748B]">
+                ยังไม่ได้เลือกสินค้า
+              </div>
+              <div className="mt-1 text-xs leading-5 text-[#94A3B8]">
+                ติ๊กสินค้าจากตารางด้านซ้าย
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

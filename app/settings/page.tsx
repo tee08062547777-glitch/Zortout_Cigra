@@ -208,21 +208,21 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       <Sidebar />
 
-      <div className="ml-[200px] flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen flex-1 flex-col pb-16 transition-[margin] duration-200 md:ml-[var(--sidebar-offset,210px)] md:pb-0">
         <Header
           title="ตั้งค่า"
           subtitle="จัดการการซิงค์สต็อกและข้อมูลเชื่อมต่อ Zortout"
         />
 
-        <main className="flex-1 overflow-auto px-[22px] py-[18px]">
-          <div className="grid max-w-6xl grid-cols-[minmax(0,1fr)_320px] gap-5">
+        <main className="flex-1 overflow-auto px-3 py-3 sm:px-[22px] sm:py-[18px]">
+          <div className="grid max-w-6xl grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
-              <section className="rounded-lg border border-[#E5E7EB] bg-white p-5">
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
+              <section className="rounded-lg border border-[#E5E7EB] bg-white p-4 sm:p-5">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="min-w-0">
                     <h2 className="text-base font-semibold text-[#111827]">
                       การซิงค์อัตโนมัติ
                     </h2>
@@ -254,8 +254,8 @@ export default function SettingsPage() {
                 )}
 
                 <div className="space-y-5">
-                  <label className="flex cursor-pointer items-center justify-between rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-4">
-                    <div>
+                  <label className="flex cursor-pointer flex-col gap-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <div className="text-sm font-semibold text-[#111827]">
                         เปิดการซิงค์อัตโนมัติ
                       </div>
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                         {settings.sync_interval_minutes} นาที
                       </span>
                     </div>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                       {intervalOptions.map((option) => (
                         <button
                           key={option.value}
@@ -322,8 +322,8 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <div>
+                  <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <div className="text-sm font-semibold text-blue-900">
                         ซิงค์ล่าสุด
                       </div>
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                       type="button"
                       onClick={saveSettings}
                       disabled={savingSettings}
-                      className="rounded-lg bg-[#10B981] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#059669] disabled:opacity-50"
+                      className="w-full rounded-lg bg-[#10B981] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#059669] disabled:opacity-50 sm:w-auto"
                     >
                       {savingSettings ? "กำลังบันทึก..." : "บันทึกการซิงค์"}
                     </button>
@@ -343,7 +343,7 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              <section className="rounded-lg border border-[#E5E7EB] bg-white p-5">
+              <section className="rounded-lg border border-[#E5E7EB] bg-white p-4 sm:p-5">
                 <div className="mb-5">
                   <h2 className="text-base font-semibold text-[#111827]">
                     Zortout Credentials
@@ -384,7 +384,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-[#111827]">
                         ZORT_MID
@@ -432,7 +432,7 @@ export default function SettingsPage() {
             </div>
 
             <aside className="space-y-5">
-              <section className="rounded-lg border border-[#E5E7EB] bg-white p-5">
+              <section className="rounded-lg border border-[#E5E7EB] bg-white p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-[#111827]">
                   สถานะระบบ
                 </h3>
@@ -468,7 +468,7 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              <section className="rounded-lg border border-orange-200 bg-orange-50 p-5">
+              <section className="rounded-lg border border-orange-200 bg-orange-50 p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-orange-900">
                   วิธีหา Cookie
                 </h3>

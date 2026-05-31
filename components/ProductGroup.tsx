@@ -61,7 +61,7 @@ export function ProductGroup({
           onClick={(e) => e.stopPropagation()}
           className="h-4 w-4"
         />
-        <span className="flex-1 text-sm font-semibold text-[#111827]">
+        <span className="min-w-0 flex-1 break-words text-sm font-semibold text-[#111827]">
           {group}
         </span>
         <span className="whitespace-nowrap rounded-full border border-[#E5E7EB] bg-[#F8FAFC] px-2 py-0.5 text-xs text-[#6B7280]">
@@ -85,7 +85,7 @@ export function ProductGroup({
             return (
               <div
                 key={key}
-                className={`flex cursor-pointer items-center gap-2.5 border-b border-[#E5E7EB] p-2 pl-7 transition-colors last:border-b-0 ${
+                className={`flex cursor-pointer flex-wrap items-center gap-2.5 border-b border-[#E5E7EB] p-2 pl-4 transition-colors last:border-b-0 sm:flex-nowrap sm:pl-7 ${
                   isSelected ? "bg-[#F0FDF4]" : "hover:bg-[#F9FAFB]"
                 }`}
                 onClick={() => onSelect(key, !isSelected)}
@@ -98,13 +98,13 @@ export function ProductGroup({
                   className="h-4 w-4"
                 />
                 <span
-                  className={`flex-1 text-sm ${
+                  className={`min-w-[160px] flex-1 break-words text-sm ${
                     isSelected ? "font-medium text-[#059669]" : "text-[#6B7280]"
                   }`}
                 >
                   {item.variant || item.fullName}
                 </span>
-                <span className="min-w-[50px] text-right text-xs text-[#6B7280]">
+                <span className="ml-6 min-w-[50px] text-left text-xs text-[#6B7280] sm:ml-0 sm:text-right">
                   {item.stock} ชิ้น
                   {item.stock > 10 && (
                     <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-[#D1FAE5] px-2 py-0.5 text-xs font-medium text-[#065F46]">

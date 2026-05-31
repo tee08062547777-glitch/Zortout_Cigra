@@ -45,7 +45,7 @@ interface StatsProps {
 
 export function Stats({ inStock, selected, groups }: StatsProps) {
   return (
-    <div className="mb-3.5 grid grid-cols-3 gap-2.5">
+    <div className="mb-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
       <StatCard label="พร้อมส่ง" value={inStock} />
       <StatCard label="เลือกแล้ว" value={selected} color="purple" />
       <StatCard label="กลุ่มสินค้า" value={groups} color="gray" />
@@ -69,7 +69,7 @@ function StatCard({ label, value, color = "default" }: StatCardProps) {
   return (
     <div className="min-w-0 rounded-lg border border-[#E5E7EB] bg-white p-3 shadow-sm">
       <div className="mb-1 truncate text-xs text-[#6B7280]">{label}</div>
-      <div className={`text-2xl font-semibold ${colorClasses[color]}`}>
+      <div className={`text-xl font-semibold sm:text-2xl ${colorClasses[color]}`}>
         {value}
       </div>
     </div>

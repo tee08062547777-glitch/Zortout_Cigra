@@ -31,15 +31,15 @@ export function ProductModal({ isOpen, products, onClose }: ProductModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-200 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-200 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-lg"
+        className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-lg sm:max-h-[85vh] sm:rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-4">
-          <div>
+        <div className="flex items-center justify-between gap-3 border-b border-[#E5E7EB] px-4 py-4 sm:px-5">
+          <div className="min-w-0">
             <h2 className="text-base font-semibold text-[#111827]">
               รายการสินค้าที่เลือก
             </h2>
@@ -57,7 +57,7 @@ export function ProductModal({ isOpen, products, onClose }: ProductModalProps) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           {products.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[#D1D5DB] p-8 text-center text-sm text-[#6B7280]">
               ยังไม่ได้เลือกรายการสินค้า
@@ -71,8 +71,8 @@ export function ProductModal({ isOpen, products, onClose }: ProductModalProps) {
                     key={group}
                     className="overflow-hidden rounded-lg border border-[#E5E7EB]"
                   >
-                    <div className="flex items-center justify-between bg-[#F8FAFC] px-4 py-3">
-                      <h3 className="text-sm font-semibold text-[#111827]">
+                    <div className="flex items-center justify-between gap-3 bg-[#F8FAFC] px-4 py-3">
+                      <h3 className="min-w-0 break-words text-sm font-semibold text-[#111827]">
                         {group}
                       </h3>
                       <span className="rounded-full border border-[#E5E7EB] bg-white px-2 py-1 text-xs text-[#6B7280]">
@@ -84,7 +84,7 @@ export function ProductModal({ isOpen, products, onClose }: ProductModalProps) {
                       {items.map((item) => (
                         <div
                           key={`${item.pid}-${item.variant || ""}`}
-                          className="flex items-center gap-3 px-4 py-3"
+                          className="flex items-center gap-3 px-3 py-3 sm:px-4"
                         >
                           <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]">
                             {item.image_url ? (
@@ -104,7 +104,7 @@ export function ProductModal({ isOpen, products, onClose }: ProductModalProps) {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-[#111827]">
+                            <p className="break-words text-sm font-medium text-[#111827] sm:truncate">
                               {item.variant || item.full_name}
                             </p>
                             <p className="mt-0.5 truncate text-xs text-[#6B7280]">
