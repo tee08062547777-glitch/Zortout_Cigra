@@ -1,0 +1,308 @@
+"use client";
+
+import { useCallback, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+import { Sidebar } from "@/components/Sidebar";
+import { Header } from "@/components/Header";
+import { FilterBar } from "@/components/FilterBar";
+import { CategoryPills, Stats } from "@/components/Stats";
+import { ProductGroup } from "@/components/ProductGroup";
+import { RightPanel } from "@/components/RightPanel";
+import { ProductModal } from "@/components/ProductModal";
+
+interface Product {
+  pid: string;
+  sku: string;
+  product_name: string;
+  full_name: string;
+  variant: string | null;
+  stock: number;
+  unit: string | null;
+  image_url: string | null;
+}
+
+const CATEGORIES = [
+  {
+    id: "disposable",
+    label: "พอตใช้แล้วทิ้ง",
+    icon: "🚬",
+    keywords: ["puffs", "puff", "infy 20k", "relx"],
+  },
+  {
+    id: "pod",
+    label: "เครื่อง / พอต",
+    icon: "📱",
+    keywords: ["pod", "device"],
+  },
+  {
+    id: "saltnic",
+    label: "ซอลท์นิค",
+    icon: "🧪",
+    keywords: ["salt", "saltnic"],
+  },
+];
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [minStock, setMinStock] = useState(1);
+  const [showQty, setShowQty] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+
+  const loadProducts = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("product_name");
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Failed to load products:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const checkAuth = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    setUser(user);
+    await loadProducts();
+  }, [loadProducts, router]);
+
+  useEffect(() => {
+    void Promise.resolve().then(checkAuth);
+  }, [checkAuth]);
+
+  const handleSync = async () => {
+    if (!user) return;
+
+    setSyncLoading(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const response = await fetch("/api/sync-stock", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Sync failed");
+      }
+
+      await loadProducts();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      alert("❌ " + message);
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  const getCategoryForProduct = (product: Product): string => {
+    const text = (
+      product.product_name +
+      " " +
+      (product.variant || "")
+    ).toLowerCase();
+    for (const cat of CATEGORIES) {
+      if (cat.keywords.some((kw) => text.includes(kw.toLowerCase()))) {
+        return cat.id;
+      }
+    }
+    return "other";
+  };
+
+  const filteredProducts = products.filter((p) => {
+    if (p.stock < minStock) return false;
+    if (activeCategory !== "all" && getCategoryForProduct(p) !== activeCategory)
+      return false;
+    if (search) {
+      const searchText = (
+        p.product_name +
+        " " +
+        (p.variant || "")
+      ).toLowerCase();
+      if (!searchText.includes(search.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const groupedProducts = filteredProducts.reduce(
+    (acc, product) => {
+      if (!acc[product.product_name]) {
+        acc[product.product_name] = [];
+      }
+      acc[product.product_name].push(product);
+      return acc;
+    },
+    {} as Record<string, Product[]>,
+  );
+
+  const selectedProducts = Array.from(selectedItems)
+    .map((key) => {
+      const [pid, variant] = key.split("||");
+      return products.find(
+        (p) => String(p.pid) === pid && (p.variant || "") === variant,
+      );
+    })
+    .filter(Boolean) as Product[];
+
+  const selectedItemsForPanel = selectedProducts.map((p) => ({
+    group: p.product_name,
+    variant: p.variant || p.product_name,
+    stock: p.stock,
+    image_url: p.image_url,
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin mb-4">⏳</div>
+          <p className="text-[#6B7280]">กำลังโหลด...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-[#F8FAFC]">
+      <Sidebar />
+
+      <div className="ml-[200px] flex-1 flex flex-col min-h-screen">
+        <Header
+          title="สินค้าพร้อมส่ง"
+          subtitle="เลือกสินค้าที่ต้องการแสดงในลิสต์"
+        >
+          <span className="text-xs text-[#6B7280] bg-[#F8FAFC] border border-[#E5E7EB] rounded-full px-2.5 py-1 whitespace-nowrap">
+            {user?.email}
+          </span>
+          <button
+            onClick={() => handleSync()}
+            disabled={syncLoading}
+            className="flex items-center gap-1.5 bg-[#3B82F6] text-white border-none rounded-lg px-4 py-2 font-sans text-sm font-medium cursor-pointer hover:bg-[#2563EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+            {syncLoading ? "กำลัง sync..." : "Sync Now"}
+          </button>
+
+        </Header>
+
+        <div className="flex-1 px-[22px] py-[18px] overflow-auto pb-20">
+          <div className="flex gap-[18px]">
+            <div className="flex-1 min-w-0">
+              <FilterBar
+                onSearch={setSearch}
+                onMinStockChange={setMinStock}
+                onShowQtyChange={setShowQty}
+              />
+
+              <CategoryPills
+                pills={[
+                  { id: "all", label: "ทั้งหมด", icon: "📦" },
+                  ...CATEGORIES,
+                ]}
+                active={activeCategory}
+                onSelect={setActiveCategory}
+              />
+
+              <Stats
+                inStock={products.filter((p) => p.stock > minStock).length}
+                selected={selectedItems.size}
+                groups={Object.keys(groupedProducts).length}
+              />
+
+              <div className="mb-2">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <input type="checkbox" className="w-4 h-4" />
+                  <span className="text-xs text-[#6B7280]">เลือกทั้งหมด</span>
+                  <button className="px-3 py-1 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:border-[#10B981] hover:text-[#10B981]">
+                    เลือกทั้งหมด
+                  </button>
+                  <button className="px-3 py-1 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:border-[#10B981] hover:text-[#10B981]">
+                    ยกเลิกทั้งหมด
+                  </button>
+                </div>
+              </div>
+
+              {Object.entries(groupedProducts)
+                .sort((a, b) => a[0].localeCompare(b[0], "th"))
+                .map(([group, items]) => (
+                  <ProductGroup
+                    key={group}
+                    group={group}
+                    items={items.map((p) => ({
+                      pid: p.pid,
+                      fullName: p.full_name,
+                      variant: p.variant || "",
+                      stock: p.stock,
+                    }))}
+                    selectedItems={selectedItems}
+                    onSelect={(key, checked) => {
+                      setSelectedItems((currentSelected) => {
+                        const newSelected = new Set(currentSelected);
+                        if (checked) {
+                          newSelected.add(key);
+                        } else {
+                          newSelected.delete(key);
+                        }
+                        return newSelected;
+                      });
+                    }}
+                    showQty={showQty}
+                  />
+                ))}
+            </div>
+
+            <RightPanel
+              selectedItems={selectedItemsForPanel}
+              showQty={showQty}
+              onViewList={() => setProductModalOpen(true)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <ProductModal
+        isOpen={productModalOpen}
+        products={selectedProducts}
+        onClose={() => setProductModalOpen(false)}
+      />
+    </div>
+  );
+}
