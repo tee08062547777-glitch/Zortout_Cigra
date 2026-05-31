@@ -270,10 +270,7 @@ export default function SettingsPage() {
       <Sidebar />
 
       <div className="flex min-h-screen flex-1 flex-col pb-16 transition-[margin] duration-200 md:ml-[var(--sidebar-offset,210px)] md:pb-0">
-        <Header
-          title="ตั้งค่า"
-          subtitle="จัดการการซิงค์สต็อกและข้อมูลเชื่อมต่อ Zortout"
-        />
+        <Header title="ตั้งค่า" />
 
         <main className="flex-1 overflow-auto px-3 py-3 sm:px-[22px] sm:py-[18px]">
           <div className="grid max-w-6xl grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">

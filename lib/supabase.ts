@@ -80,6 +80,48 @@ export type Database = {
           updated_at: string;
         }>;
       };
+      categories: {
+        Row: {
+          id: string;
+          label: string;
+          icon: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          label: string;
+          icon?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          label: string;
+          icon: string | null;
+          sort_order: number;
+          updated_at: string;
+        }>;
+      };
+      category_keywords: {
+        Row: {
+          id: string;
+          category_id: string;
+          keyword: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          category_id: string;
+          keyword: string;
+          created_at?: string;
+        };
+        Update: Partial<{
+          category_id: string;
+          keyword: string;
+        }>;
+      };
     };
   };
 };

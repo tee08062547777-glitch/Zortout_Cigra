@@ -2,7 +2,6 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
@@ -11,7 +10,7 @@ import { CategoryPills, Stats } from "@/components/Stats";
 import { ProductGroup } from "@/components/ProductGroup";
 import { RightPanel } from "@/components/RightPanel";
 import { ProductModal } from "@/components/ProductModal";
-import categoriesJson from "./categories.json";
+import { fallbackCategories, type Category } from "@/lib/categories";
 
 interface Product {
   pid: string;
@@ -24,26 +23,24 @@ interface Product {
   image_url: string | null;
 }
 
-interface Category {
+interface CategoryRow {
   id: string;
   label: string;
-  icon: string;
-  keywords: string[];
+  icon: string | null;
+  sort_order: number | null;
+  category_keywords?: { keyword: string }[] | null;
 }
-
-const CATEGORIES = Object.values(categoriesJson) as Category[];
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [minStock, setMinStock] = useState(1);
   const [showQty, setShowQty] = useState(false);
+  const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [activeCategory, setActiveCategory] = useState("all");
-  const [syncLoading, setSyncLoading] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [controlsCollapsed, setControlsCollapsed] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
@@ -66,6 +63,35 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const loadCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, label, icon, sort_order, category_keywords(keyword)")
+      .order("sort_order", { ascending: true })
+      .order("label", { ascending: true });
+
+    if (error) {
+      console.warn("Falling back to JSON categories:", error.message);
+      setCategories(fallbackCategories);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      setCategories(fallbackCategories);
+      return;
+    }
+
+    setCategories(
+      (data as CategoryRow[]).map((category) => ({
+        id: category.id,
+        label: category.label,
+        icon: category.icon || "🏷️",
+        keywords:
+          category.category_keywords?.map((item) => item.keyword.trim()) ?? [],
+      })),
+    );
+  }, []);
+
   const checkAuth = useCallback(async () => {
     const {
       data: { user },
@@ -76,43 +102,12 @@ export default function DashboardPage() {
       return;
     }
 
-    setUser(user);
-    await loadProducts();
-  }, [loadProducts, router]);
+    await Promise.all([loadCategories(), loadProducts()]);
+  }, [loadCategories, loadProducts, router]);
 
   useEffect(() => {
     void Promise.resolve().then(checkAuth);
   }, [checkAuth]);
-
-  const handleSync = async () => {
-    if (!user) return;
-
-    setSyncLoading(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const response = await fetch("/api/sync-stock", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Sync failed");
-      }
-
-      await loadProducts();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      alert("ซิงค์ไม่สำเร็จ: " + message);
-    } finally {
-      setSyncLoading(false);
-    }
-  };
 
   const getCategoryForProduct = (product: Product): string => {
     const text = (
@@ -123,7 +118,7 @@ export default function DashboardPage() {
     let matchedCategory = "accessory";
     let matchedKeywordLength = 0;
 
-    for (const cat of CATEGORIES) {
+    for (const cat of categories) {
       for (const keyword of cat.keywords) {
         const normalizedKeyword = keyword.toLowerCase();
         if (
@@ -221,35 +216,7 @@ export default function DashboardPage() {
       <Sidebar />
 
       <div className="flex min-h-0 flex-1 flex-col pb-16 transition-[margin] duration-200 md:ml-[var(--sidebar-offset,210px)] md:pb-0">
-        <Header
-          title="สินค้าพร้อมส่ง"
-          subtitle="เลือกสินค้าที่ต้องการแสดงในลิสต์"
-        >
-          <span className="text-xs text-[#6B7280] bg-[#F8FAFC] border border-[#E5E7EB] rounded-full px-2.5 py-1 whitespace-nowrap">
-            {user?.email}
-          </span>
-          <button
-            onClick={() => handleSync()}
-            disabled={syncLoading}
-            className="flex items-center gap-1.5 rounded-lg border-none bg-[#3B82F6] px-3 py-2 font-sans text-xs font-medium text-white transition-colors hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            {syncLoading ? "กำลัง sync..." : "Sync Now"}
-          </button>
-
-        </Header>
+        <Header title="สินค้าพร้อมส่ง" onSyncComplete={loadProducts} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 pb-20 sm:px-[22px] sm:py-[18px]">
           <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-[18px]">
@@ -265,30 +232,32 @@ export default function DashboardPage() {
                       {products.length} รายการ
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setControlsCollapsed((current) => !current)
-                    }
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-[#10B981] hover:text-[#059669] sm:w-auto"
-                  >
-                    <svg
-                      className={`h-3.5 w-3.5 transition-transform ${
-                        controlsCollapsed ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setControlsCollapsed((current) => !current)
+                      }
+                      className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors hover:border-[#10B981] hover:text-[#059669]"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="m6 9 6 6 6-6"
-                      />
-                    </svg>
-                    {controlsCollapsed ? "แสดงตัวกรอง" : "ซ่อนตัวกรอง"}
-                  </button>
+                      <svg
+                        className={`h-3.5 w-3.5 transition-transform ${
+                          controlsCollapsed ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                      {controlsCollapsed ? "แสดงตัวกรอง" : "ซ่อนตัวกรอง"}
+                    </button>
+                  </div>
                 </div>
 
                 {!controlsCollapsed && (
@@ -301,7 +270,7 @@ export default function DashboardPage() {
                     <CategoryPills
                       pills={[
                         { id: "all", label: "ทั้งหมด", icon: "\u{1F4E6}" },
-                        ...CATEGORIES,
+                        ...categories,
                       ]}
                       active={activeCategory}
                       onSelect={setActiveCategory}
