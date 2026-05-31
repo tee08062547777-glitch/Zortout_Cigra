@@ -281,7 +281,7 @@ export default function DashboardPage() {
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 pb-20 sm:px-[22px] sm:py-[18px]">
           <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-[18px]">
             <div className="flex-1 min-w-0">
-              <div className="sticky top-0 z-30 mb-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]/95 p-2.5 shadow-sm backdrop-blur">
+              <div className="mb-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]/95 p-2.5 shadow-sm backdrop-blur">
                 <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-[#111827]">

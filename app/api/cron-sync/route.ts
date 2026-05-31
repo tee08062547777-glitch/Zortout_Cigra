@@ -127,15 +127,29 @@ async function syncForUser(userId: string) {
     if (insertError) throw insertError;
   }
 
+  const syncedAt = new Date().toISOString();
   const { error: updateError } = await supabase
     .from("sync_settings")
     .update({
-      last_sync_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      last_sync_at: syncedAt,
+      last_sync_by_user_id: userId,
+      last_sync_by_email: "ระบบซิงค์อัตโนมัติ",
+      updated_at: syncedAt,
     })
     .eq("user_id", userId);
 
-  if (updateError) throw updateError;
+  if (updateError) {
+    console.warn("[CRON] Metadata update failed, falling back:", updateError);
+    const { error: fallbackError } = await supabase
+      .from("sync_settings")
+      .update({
+        last_sync_at: syncedAt,
+        updated_at: syncedAt,
+      })
+      .eq("user_id", userId);
+
+    if (fallbackError) throw fallbackError;
+  }
 
   console.log(`[CRON] Completed user ${userId}. Inserted ${dbProducts.length}`);
 

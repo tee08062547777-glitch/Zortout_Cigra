@@ -10,6 +10,8 @@ interface SyncSettings {
   auto_sync_enabled: boolean;
   sync_interval_minutes: number;
   last_sync_at: string | null;
+  last_sync_by_user_id: string | null;
+  last_sync_by_email: string | null;
 }
 
 interface ApiCredentials {
@@ -34,6 +36,8 @@ export default function SettingsPage() {
     auto_sync_enabled: false,
     sync_interval_minutes: 60,
     last_sync_at: null,
+    last_sync_by_user_id: null,
+    last_sync_by_email: null,
   });
   const [credentials, setCredentials] = useState<ApiCredentials>({
     zort_cookie: "",
@@ -49,17 +53,42 @@ export default function SettingsPage() {
   const loadSettings = async (userId: string) => {
     const { data, error } = await supabase
       .from("sync_settings")
-      .select("auto_sync_enabled, sync_interval_minutes, last_sync_at")
+      .select(
+        "auto_sync_enabled, sync_interval_minutes, last_sync_at, last_sync_by_user_id, last_sync_by_email",
+      )
       .eq("user_id", userId)
       .single();
 
-    if (error && error.code !== "PGRST116") throw error;
+    if (error && error.code !== "PGRST116") {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("sync_settings")
+        .select("auto_sync_enabled, sync_interval_minutes, last_sync_at")
+        .eq("user_id", userId)
+        .single();
+
+      if (fallbackError && fallbackError.code !== "PGRST116") {
+        throw fallbackError;
+      }
+
+      if (fallbackData) {
+        setSettings({
+          auto_sync_enabled: fallbackData.auto_sync_enabled,
+          sync_interval_minutes: fallbackData.sync_interval_minutes || 60,
+          last_sync_at: fallbackData.last_sync_at,
+          last_sync_by_user_id: null,
+          last_sync_by_email: null,
+        });
+      }
+      return;
+    }
 
     if (data) {
       setSettings({
         auto_sync_enabled: data.auto_sync_enabled,
         sync_interval_minutes: data.sync_interval_minutes || 60,
         last_sync_at: data.last_sync_at,
+        last_sync_by_user_id: data.last_sync_by_user_id,
+        last_sync_by_email: data.last_sync_by_email,
       });
     }
   };
@@ -196,8 +225,15 @@ export default function SettingsPage() {
   };
 
   const lastSyncText = settings.last_sync_at
-    ? new Date(settings.last_sync_at).toLocaleString("th-TH")
+    ? new Date(settings.last_sync_at).toLocaleString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "ยังไม่เคยซิงค์";
+  const lastSyncByText = settings.last_sync_by_email || "ยังไม่มีข้อมูล";
 
   if (loading) {
     return (
@@ -328,7 +364,10 @@ export default function SettingsPage() {
                         ซิงค์ล่าสุด
                       </div>
                       <div className="mt-1 text-xs text-blue-700">
-                        {lastSyncText}
+                        วันที่ {lastSyncText}
+                      </div>
+                      <div className="mt-1 text-xs text-blue-700">
+                        โดย {lastSyncByText}
                       </div>
                     </div>
                     <button
@@ -451,6 +490,18 @@ export default function SettingsPage() {
                       }
                     >
                       {settings.auto_sync_enabled ? "พร้อมทำงาน" : "ปิดอยู่"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[#6B7280]">Last sync</span>
+                    <span className="min-w-0 truncate text-right font-semibold text-[#111827]">
+                      {settings.last_sync_at ? lastSyncText : "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[#6B7280]">Sync by</span>
+                    <span className="min-w-0 truncate text-right font-semibold text-[#111827]">
+                      {lastSyncByText}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

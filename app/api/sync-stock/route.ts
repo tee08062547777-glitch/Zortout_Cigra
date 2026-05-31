@@ -96,20 +96,41 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Update sync settings
-    const { error } = await supabase
+    const syncedAt = new Date().toISOString();
+    const syncMetadata = {
+      last_sync_at: syncedAt,
+      last_sync_by_user_id: user.id,
+      last_sync_by_email: user.email || null,
+      updated_at: syncedAt,
+    };
+
+    const { error: syncMetadataError } = await supabase
       .from("sync_settings")
-      .update({
-        last_sync_at: new Date().toISOString(),
-      })
+      .update(syncMetadata)
       .eq("user_id", user.id);
+
+    if (syncMetadataError) {
+      console.warn("[SYNC] Metadata update failed, falling back:", syncMetadataError);
+      const { error: fallbackError } = await supabase
+        .from("sync_settings")
+        .update({
+          last_sync_at: syncedAt,
+          updated_at: syncedAt,
+        })
+        .eq("user_id", user.id);
+
+      if (fallbackError) {
+        console.error("[SYNC] Sync settings update error:", fallbackError);
+      }
+    }
 
     console.log(`[SYNC] Completed. Inserted ${dbProducts.length} products`);
 
     return NextResponse.json({
       success: true,
       count: dbProducts.length,
-      timestamp: new Date().toISOString(),
+      timestamp: syncedAt,
+      syncedBy: user.email || null,
     });
   } catch (error) {
     console.error("[SYNC] Error:", error);

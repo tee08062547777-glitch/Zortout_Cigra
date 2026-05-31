@@ -49,6 +49,8 @@ CREATE TABLE sync_settings (
     auto_sync_enabled BOOLEAN DEFAULT FALSE,
     sync_interval_minutes INTEGER DEFAULT 60,
     last_sync_at TIMESTAMPTZ,
+    last_sync_by_user_id UUID,
+    last_sync_by_email TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
