@@ -244,10 +244,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
       <Sidebar />
 
-      <div className="flex min-h-screen flex-1 flex-col pb-16 transition-[margin] duration-200 md:ml-[var(--sidebar-offset,210px)] md:pb-0">
+      <div className="flex min-h-0 flex-1 flex-col pb-16 transition-[margin] duration-200 md:ml-[var(--sidebar-offset,210px)] md:pb-0">
         <Header
           title="สินค้าพร้อมส่ง"
           subtitle="เลือกสินค้าที่ต้องการแสดงในลิสต์"
@@ -278,7 +278,7 @@ export default function DashboardPage() {
 
         </Header>
 
-        <div className="flex-1 overflow-auto px-3 py-3 pb-20 sm:px-[22px] sm:py-[18px]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 pb-20 sm:px-[22px] sm:py-[18px]">
           <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-[18px]">
             <div className="flex-1 min-w-0">
               <div className="sticky top-0 z-30 mb-3 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC]/95 p-2.5 shadow-sm backdrop-blur">

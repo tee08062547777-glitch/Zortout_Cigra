@@ -148,7 +148,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-2 py-1.5 text-xs font-semibold transition-colors md:flex-row md:text-sm ${
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-2 py-1.5 text-xs font-semibold transition-colors md:w-full md:flex-none md:flex-row md:items-center md:justify-start md:text-sm ${
                 collapsed
                   ? "md:justify-center md:px-0 md:py-2.5"
                   : "md:gap-2.5 md:px-3 md:py-2.5"
