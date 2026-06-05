@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { all } from "axios";
 import { load } from "cheerio";
 
 interface Product {
@@ -101,7 +101,6 @@ async function fetchMainPage(
       Cookie: cookie,
     },
   });
-
   return res.data;
 }
 
@@ -160,7 +159,7 @@ export async function scrapeProducts(
 
     allProducts.push(...products);
 
-    if (products.length < 100) {
+    if (products.length < 80) {
       console.log(
         `Stop at page ${page}, last page has ${products.length} products.`,
       );
